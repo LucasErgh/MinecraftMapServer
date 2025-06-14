@@ -1,0 +1,61 @@
+@page "/map"
+@rendermode InteractiveServer
+
+<PageTitle>Map</PageTitle>
+
+<svg width="500" height="500" 
+    @onmousedown="HandleMouseDown"
+    @onmouseup="HandleMouseUp"
+    @onmousemove="MouseMove"
+    @oncontextmenu="OnRightClick"
+    @oncontextmenu:preventDefault="true"
+>
+    @for(int i = 0; i < height; i+=(width/100)){
+        if (i % 100 == 0) {
+            <line x1=0 y1=@i x2=@width y2=@i style="stroke:black;stroke-width:2"/>
+            <line x1=@i y1=0 x2=@i y2=@height style="stroke:black;stroke-width:2"/>
+        }
+        else {
+            <line x1=0 y1=@i x2=@width y2=@i style="stroke:black;stroke-width:.1"/>
+            <line x1=@i y1=0 x2=@i y2=@width style="stroke:black;stroke-width:.1"/>
+        }
+    }
+
+    @foreach((double, double) cur in points){
+        <circle cx=@(cur.Item1 + cameraCenter.Item1) cy=@(cur.Item2 + cameraCenter.Item2) r="10" stroke="green" stroke-width="1" fill="yellow"/>
+    }
+</svg>
+
+@foreach((double, double) cur in points){
+    <p>@cur.Item1 , @cur.Item2</p>
+}
+
+@using System.Numerics;
+@code {
+    public bool mousedown = false;
+    public (double, double) cameraCenter = (0, 0);
+    public int zoomScale=1; // one pixel is one block
+    public int width=1000;
+    public int height = 1000;
+    public List<(double, double)> points = new() {(40, -35), (100, 120), (39, 320)};
+    (double, double) mbd;
+    public void HandleMouseUp(MouseEventArgs e){
+        mousedown = false;
+    }
+    public void MouseMove(MouseEventArgs e){
+        if(mousedown == true){
+            cameraCenter = (cameraCenter.Item1 + e.MovementX, cameraCenter.Item2 + e.MovementY);
+        }
+    }
+    public void HandleMouseDown(MouseEventArgs e){
+        mousedown = true;
+        if (e.Button == 2){
+            points.Add((e.OffsetX, e.OffsetY));
+            StateHasChanged();
+        }
+    }
+    private void OnRightClick(MouseEventArgs e)
+    {
+        // You can handle right-click logic here if needed
+    }
+}
